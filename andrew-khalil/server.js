@@ -28,8 +28,7 @@ app.get('/articles', (request, response) => {
     `SELECT *
     FROM articles
     INNER JOIN authors
-    ON articles.author_id=authors.author_id;
-  `)
+    ON articles.author_id=authors.author_id;`)
     .then(result => {
       response.send(result.rows);
     })
@@ -41,8 +40,8 @@ app.get('/articles', (request, response) => {
 app.post('/articles', (request, response) => {
   client.query(
     `INSERT INTO 
-    article(author, "authorUrl")
-    VALUES ($1, $2);`,
+    authors(author, "authorUrl")
+    VALUES ($1, $2) ON CONFLICT DO NOTHING`,
     [request.body.author,
       request.body.authorUrl],
     function(err) {
@@ -54,7 +53,7 @@ app.post('/articles', (request, response) => {
 
   function queryTwo() {
     client.query(
-      `SELECT *
+      `SELECT author_id
       FROM authors
       WHERE author=$1;`,
       [request.body.author],
@@ -69,11 +68,12 @@ app.post('/articles', (request, response) => {
   }
 
   function queryThree(author_id) {
+    console.log('request body', request.body);
     client.query(
       `INSERT INTO
       articles(author_id, title, category, "publishedOn", body)
       VALUES ($1, $2, $3, $4, $5);`,
-      [ request.body.author_id,
+      [ author_id,
         request.body.title,
         request.body.category,
         request.body.publishedOn,
@@ -88,20 +88,21 @@ app.post('/articles', (request, response) => {
 
 app.put('/articles/:id', function(request, response) {
   client.query(
-    `UPDATE authors SET author=$1, authorUrl=$2 WHERE article_id=$3`,
+    `UPDATE authors SET author=$1, "authorUrl"=$2 WHERE author_id=$3`,
     [ request.body.author,
       request.body.authorUrl,
-      request.params.id]
+      request.body.author_id]
   )
     .then(() => {
+      console.log('request body author id', request.body.author_id);
       client.query(
-        `UPDATE articles SET author_id=$1, title=$2, category=$3, "pubishedOn"=$4, body=$5, article_id=$6`,
+        `UPDATE articles SET author_id=$1, title=$2, category=$3, "publishedOn"=$4, body=$5 WHERE article_id=$6`,
         [ request.body.author_id,
           request.body.title,
           request.body.category,
           request.body.publishedOn,
           request.body.body,
-          request.params.id]
+          request.body.id]
       )
     })
     .then(() => {
