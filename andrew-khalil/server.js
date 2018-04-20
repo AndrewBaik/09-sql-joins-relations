@@ -54,7 +54,7 @@ app.post('/articles', (request, response) => {
 
   function queryTwo() {
     client.query(
-      `SELECT author
+      `SELECT *
       FROM authors
       WHERE author=$1;`,
       [request.body.author],
@@ -88,13 +88,20 @@ app.post('/articles', (request, response) => {
 
 app.put('/articles/:id', function(request, response) {
   client.query(
-    ``,
-    []
+    `UPDATE authors SET author=$1, authorUrl=$2 WHERE article_id=$3`,
+    [ request.body.author,
+      request.body.authorUrl,
+      request.params.id]
   )
     .then(() => {
       client.query(
-        ``,
-        []
+        `UPDATE articles SET author_id=$1, title=$2, category=$3, "pubishedOn"=$4, body=$5, article_id=$6`,
+        [ request.body.author_id,
+          request.body.title,
+          request.body.category,
+          request.body.publishedOn,
+          request.body.body,
+          request.params.id]
       )
     })
     .then(() => {
