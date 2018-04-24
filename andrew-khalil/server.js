@@ -68,7 +68,6 @@ app.post('/articles', (request, response) => {
   }
 
   function queryThree(author_id) {
-    console.log('request body', request.body);
     client.query(
       `INSERT INTO
       articles(author_id, title, category, "publishedOn", body)
@@ -94,7 +93,6 @@ app.put('/articles/:id', function(request, response) {
       request.body.author_id]
   )
     .then(() => {
-      console.log('request body author id', request.body.author_id);
       client.query(
         `UPDATE articles SET author_id=$1, title=$2, category=$3, "publishedOn"=$4, body=$5 WHERE article_id=$6`,
         [ request.body.author_id,
@@ -102,7 +100,7 @@ app.put('/articles/:id', function(request, response) {
           request.body.category,
           request.body.publishedOn,
           request.body.body,
-          request.body.id]
+          request.params.id]
       )
     })
     .then(() => {
@@ -113,6 +111,15 @@ app.put('/articles/:id', function(request, response) {
     })
 });
 
+app.delete('/articles', (request, response) => {
+  client.query('DELETE FROM articles')
+    .then(() => {
+      response.send('Delete complete');
+    })
+    .catch(err => {
+      console.error(err)
+    });
+});
 app.delete('/articles/:id', (request, response) => {
   client.query(
     `DELETE FROM articles WHERE article_id=$1;`,
@@ -126,15 +133,6 @@ app.delete('/articles/:id', (request, response) => {
     });
 });
 
-app.delete('/articles', (request, response) => {
-  client.query('DELETE FROM articles')
-    .then(() => {
-      response.send('Delete complete');
-    })
-    .catch(err => {
-      console.error(err)
-    });
-});
 
 // REVIEW: This calls the loadDB() function, defined below.
 loadDB();
